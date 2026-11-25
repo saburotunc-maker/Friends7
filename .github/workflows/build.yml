@@ -12,10 +12,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.8
-      - run: gradle build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: friends-mod
-          path: |
-            build/libs/*.jar
-            !build/libs/*-sources.jar
+      - name: Find Gradle project
+        id: find
+        run: |
+          f=$(find . -maxdepth 3 \( -name settings.gradle -o -name settings.gradle.kts -o -name build.gradle -o -name build.gradle.kts \) | head -n 1)
+          if [ -z "$f" ]; then
+            echo "Gradle dosyasi bulunamadi. Repo icerigi:"
+            ls -R | head -50
+            exit 1
+          fi
+          echo "dir=$(dirname "$f")" >> "$GITHUB_OUTPUT"
+      - name: Build
+        working-directory: ${{ steps.find.outputs.dir }}
+        run: gradle build
+      - uses: ac
